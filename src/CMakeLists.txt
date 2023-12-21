@@ -106,6 +106,7 @@ set(MARIAN_SOURCES
   translator/nth_element.cpp
   translator/helpers.cpp
   translator/scorers.cpp
+  translator/swappable.cpp
 
   training/graph_group_async.cpp
   training/graph_group_sync.cpp
@@ -190,6 +191,7 @@ if(CUDA_FOUND)
     tensors/gpu/add.cu
     tensors/gpu/add_all.cu
     tensors/gpu/tensor_operators.cu
+    tensors/gpu/swap.cu
     tensors/gpu/cudnn_wrappers.cu
     translator/nth_element.cu
     translator/helpers.cu
@@ -234,12 +236,16 @@ if (NOT COMPILE_LIBRARY_ONLY)
   set_target_properties(marian_conv PROPERTIES OUTPUT_NAME marian-conv)
   target_compile_options(marian_conv PRIVATE ${ALL_WARNINGS})
 
+  add_executable(marian_swapper command/marian_swapper.cpp)
+  set_target_properties(marian_swapper PROPERTIES OUTPUT_NAME marian-swapper)
+  target_compile_options(marian_swapper PRIVATE ${ALL_WARNINGS})
+
   set(EXECUTABLES ${EXECUTABLES} marian_train marian_decoder marian_scorer marian_vocab marian_conv)
 
   # generate the tgz file via a custom script. This will always re-create the tarball
   add_custom_target(marian_tgz
     COMMAND ${CMAKE_COMMAND} -DCWD=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/Tarball.cmake
-    DEPENDS marian_train marian_decoder marian_scorer marian_vocab marian_conv)
+    DEPENDS marian_train marian_decoder marian_scorer marian_vocab marian_conv marian_swapper)
 
   if(COMPILE_SERVER)
     add_executable(marian_server command/marian_server.cpp)
