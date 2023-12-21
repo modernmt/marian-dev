@@ -18,6 +18,7 @@ The Marian toolkit provides several commands, covering different modes of operat
   - `marian-scorer`
   - `marian-vocab`
   - `marian-conv`
+  - `marian-swapper`
 
 Each of which has a corresponding file in the `command` directory.
 
@@ -25,8 +26,10 @@ The main `marian` command is capable of running all other modes (except server),
 
 Training is covered by the main `marian` command, with relevant implementation details kept inside the `training` subdirectory. Translation is facilitated by code in the `translator` subdirectory and is handled by the `marian-decoder` command, as well as `marian-server` which provides a web-socket service. `marian-scorer` is the tool used to re-score parallel inputs or n-best lists, and uses code in the `rescorer` subdirectory.
 
-The remaining commands `marian-vocab` and `marian-conv` provide useful auxiliary functions.  `marian-vocab` is a tool to create a vocabulary file from a given text corpus. This uses components described in the Data section of this document.
+The commands `marian-vocab` and `marian-conv` provide useful auxiliary functions.  `marian-vocab` is a tool to create a vocabulary file from a given text corpus. This uses components described in the Data section of this document.
 `marian-conv` exists to convert Marian model files from `.npz`, `.bin` as well as lexical shortlists to binary shortlists. It is also possible to use this command to emit an ONNX-compliant model representation. In addition to components defined in the Data section, this also makes use of Model specific components.
+
+The command `marian-swapper` tests the model swapping.
 
 Finally, the implementation of the command-line-interface for these commands is described in the Utility section.
 
@@ -80,7 +83,7 @@ The subdirectories above constitute the components of a Model. There are two mai
 
 The usage of these interfaces sometimes combined. As an example, `Trainer`, an implementation of the `ICriterionFunction` interface used in training contains an `IModel` member from which it then computes the loss.
 
-An important specialisation of `IModel` is `IEncoderDecoder`, this specifies the interface for the `EncoderDecoder` class. `EncoderDecoder` consists of a set of Encoders and Decoders objects, which implement the interface of `EncoderBase` and `DecoderBase`, respectively. This composite object defines the behaviour of general Encoder-Decoder models. For instance, the `s2s` models implement a `EncoderS2S` and `DecoderS2S`, while `transformer` models implement a `EncoderTransformer` `DecoderTransformer`. These two use cases are both encapsulated in the `EncoderDecoder` framework. The addition of new encoder-decoder models only need implement their encoder and decoder classes. The `EncoderDecoder` models are constructed using a factory pattern in `src/models/model_factory.cpp`.
+An important specialisation of `IModel` is `IEncoderDecoder`, this specifies the interface for the `EncoderDecoder` class. `EncoderDecoder` consists of a set of Encoders and Decoders objects, which implement the interface of `EncoderBase` and `DecoderBase`, respectively. This composite object defines the behaviour of general Encoder-Decoder models. For instance, the `s2s` models implement a `EncoderS2S` and `DecoderS2S`, while `transformer` models implement a `EncoderTransformer` and a `DecoderTransformer`. These two use cases are both encapsulated in the `EncoderDecoder` framework. The addition of new encoder-decoder models only need implement their encoder and decoder classes. The `EncoderDecoder` models are constructed using a factory pattern in `src/models/model_factory.cpp`.
 
 The export of an ONNX-compliant model is handled by code here.
 ```

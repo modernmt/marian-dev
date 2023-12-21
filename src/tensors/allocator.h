@@ -190,7 +190,7 @@ public:
   }
 
   template <typename T>
-  size_t capacity(size_t num) {
+  size_t capacity(size_t num) const {
     return alignedSize(num * sizeof(T));
   }
 
