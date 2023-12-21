@@ -37,6 +37,9 @@
 #define main mainConv
 #include "marian_conv.cpp"
 #undef main
+#define main mainSwapper
+#include "marian_swapper.cpp"
+#undef main
 
 #include "3rd_party/ExceptionWithCallStack.h"
 
@@ -55,6 +58,7 @@ int main(int argc, char** argv) {
     else if (cmd == "evaluate")  return mainEvaluator(argc, argv);
     else if (cmd == "vocab")     return mainVocab(argc, argv);
     else if (cmd == "convert")   return mainConv(argc, argv);
+    else if (cmd == "swapper")   return mainSwapper(argc, argv);
     std::cerr << "Command must be train, decode, score, embed, vocab, or convert." << std::endl;
     exit(1);
   } else
