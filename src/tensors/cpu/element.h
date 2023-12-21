@@ -118,7 +118,6 @@ template <class Functor, class... Tensors>
 void Element(const Functor& functor, marian::Tensor out, Tensors... tensors) {
   switch(out->type()) {
     case Type::float32: elementFloat(functor, out, tensors...); break;
-    case Type::float16: element<half>(functor, out, tensors...); break;
     //case Type::uint32:  element<uint32_t>(functor, out, tensors...); break;
     default: ABORT("Unsupported type for element-wise operation: {}", out->type()); break;
   }
