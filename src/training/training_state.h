@@ -120,7 +120,7 @@ public:
   }
 
   // update() first calls this
-  // This is to make sure that enteredNewPeriodOf() can detect a transition intoa new period
+  // This is to make sure that enteredNewPeriodOf() can detect a transition into a new period
   void rememberPreviousProgress() {
     prevLabelsTotal = labelsTotal;
     prevBatches     = batches;
@@ -162,6 +162,17 @@ public:
     SchedulingParameter parsedSchedulingParam = SchedulingParameter::parse(schedulingParam);
     return enteredNewPeriodOf(parsedSchedulingParam);
   }
+
+  // Tests whether the units are already larger than the minimal value specified by schedulingParam
+  bool largerThan(std::string schedulingParam) const {
+    auto from = SchedulingParameter::parse(schedulingParam);
+    ABORT_IF(from.unit == SchedulingUnit::epochs,
+             "Unit {} is not supported for frequency parameters (the one(s) with value {})",
+             schedulingParam);
+    auto progress = getProgressIn(from.unit);
+    return progress >= from.n;
+  }
+
 
   void newEpoch() {
     ++epochs;

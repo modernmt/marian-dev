@@ -1,8 +1,12 @@
+#include "common/config_parser.h"
+#include <algorithm>
+#include <set>
+#include <stdexcept>
+#include <string>
 #include "common/authors.h"
 #include "common/build_info.h"
 #include "common/cli_helper.h"
 #include "common/config.h"
-#include "common/config_parser.h"
 #include "common/config_validator.h"
 #include "common/definitions.h"
 #include "common/file_stream.h"
@@ -10,10 +14,6 @@
 #include "common/options.h"
 #include "common/regex.h"
 #include "common/utils.h"
-#include <algorithm>
-#include <set>
-#include <stdexcept>
-#include <string>
 
 #if MKL_FOUND
 #include <mkl.h>
@@ -50,11 +50,11 @@ const std::set<std::string> PATHS = {
 };
 // clang-format on
 
-std::string escapeCmdLine(int argc, char** argv){
+std::string escapeCmdLine(int argc, char** argv) {
   std::string cmdLine;
   for(int i = 0; i < argc; i++) {
     std::string arg = argv[i];
-    std::string quote; // attempt to quote special chars
+    std::string quote;  // attempt to quote special chars
     if(arg.empty() || arg.find_first_of(" #`\"'\\${}|&^?*!()%><") != std::string::npos)
       quote = "'";
     arg = regex::regex_replace(arg, regex::regex("'"), "'\\''");
@@ -70,12 +70,10 @@ std::string const& ConfigParser::cmdLine() const {
 }
 
 ConfigParser::ConfigParser(cli::mode mode)
-  : cli_(config_,"Marian: Fast Neural Machine Translation in C++",
-         "General options", "", 40),
-    mode_(mode == cli::mode::server ? cli::mode::translation : mode) {
-
+    : cli_(config_, "Marian: Fast Neural Machine Translation in C++", "General options", "", 40),
+      mode_(mode == cli::mode::server ? cli::mode::translation : mode) {
   addOptionsGeneral(cli_);
-  if (mode == cli::mode::server)
+  if(mode == cli::mode::server)
     addOptionsServer(cli_);
   addOptionsModel(cli_);
 
@@ -446,6 +444,9 @@ void ConfigParser::addOptionsTraining(cli::CLIWrapper& cli) {
       "Redefine logical epoch counter as multiple of data epochs (e.g. 1e), updates (e.g. 100Ku) or labels (e.g. 1Gt). "
       "Second parameter defines width of fractional display, 0 by default.",
       {"1e", "0"});
+  cli.add<std::string>("--save-from",
+ "Save model not before arg updates (append 't' for every  arg  target labels)",
+  "0u");
 
   addSuboptionsInputLength(cli);
   addSuboptionsTSV(cli);
@@ -642,17 +643,21 @@ void ConfigParser::addOptionsValidation(cli::CLIWrapper& cli) {
       "Validate model every arg updates (append 't' for every arg target labels)",
       "10000u");
   cli.add<std::vector<std::string>>("--valid-metrics",
-      "Metric to use during validation: cross-entropy, ce-mean-words, perplexity, valid-script, "
+ "Metric to use during validation: cross-entropy, ce-mean-words, perplexity, valid-script, "
       "translation, bleu, bleu-detok (deprecated, same as bleu), bleu-segmented, chrf. "
       "Multiple metrics can be specified",
-      {"cross-entropy"});
+  {"cross-entropy"});
   cli.add<bool>("--valid-reset-stalled",
-      "Reset stalled validation metrics when the training is restarted");
+ "Reset stalled validation metrics when the training is restarted");
   cli.add<bool>("--valid-reset-all",
-      "Reset all validation metrics when the training is restarted");
+ "Reset all validation metrics when the training is restarted");
   cli.add<size_t>("--early-stopping",
-      "Stop if the first validation metric does not improve for arg consecutive validation steps",
-      10);
+ "Stop if the first validation metric does not improve for arg consecutive validation steps",
+  10);
+  cli.add<std::string>("--valid-from",
+ "Validate model not before arg updates (append 't' for every arg target labels)",
+  "0u");
+
   cli.add<std::vector<float>>("--early-stopping-epsilon",
       "An improvement lower than or equal to arg does not prevent stalled validation. "
       "i-th value corresponds to i-th metric in --valid-metrics",
@@ -924,92 +929,92 @@ void ConfigParser::addOptionsEmbedding(cli::CLIWrapper& cli) {
 void ConfigParser::addOptionsEvaluating(cli::CLIWrapper& cli) {
   auto previous_group = cli.switchGroup("Evaluator options");
 
-  cli.add<bool>("--no-reload",
-      "Do not load existing model specified in --model arg");
+  cli.add<bool>("--no-reload", "Do not load existing model specified in --model arg");
   // @TODO: move options like vocabs and train-sets to a separate procedure as they are defined twice
   cli.add<std::vector<std::string>>("--train-sets,-t",
-      "Paths to corpora to be scored: source target");
-  cli.add<std::string>("--output,-o",
-      "Path to output file, stdout by default",
-      "stdout");
+                                    "Paths to corpora to be scored: source target");
+  cli.add<std::string>("--output,-o", "Path to output file, stdout by default", "stdout");
   cli.add<std::vector<std::string>>("--vocabs,-v",
-      "Paths to vocabulary files have to correspond to --train-sets. "
-      "If this parameter is not supplied we look for vocabulary files source.{yml,json} and target.{yml,json}. "
-      "If these files do not exists they are created");
-  cli.add<size_t>("--width",
-      "Floating point precision of metric outputs",
-      4);
-  cli.add<std::string>("--average",
-      "Report average of all sentence-level values. By default the average is appended as the last line. "
-      "Alternatively, we can provide `--average only` which supresses other values.",
-      "skip")->implicit_val("append");
+                                    "Paths to vocabulary files have to correspond to --train-sets. "
+                                    "If this parameter is not supplied we look for vocabulary "
+                                    "files source.{yml,json} and target.{yml,json}. "
+                                    "If these files do not exists they are created");
+  cli.add<size_t>("--width", "Floating point precision of metric outputs", 4);
+  cli.add<std::string>(
+         "--average",
+         "Report average of all sentence-level values. By default the average is appended as the "
+         "last line. "
+         "Alternatively, we can provide `--average only` which supresses other values.",
+         "skip")
+      ->implicit_val("append");
 
   addSuboptionsInputLength(cli);
   addSuboptionsTSV(cli);
   addSuboptionsDevices(cli);
   addSuboptionsBatching(cli);
 
-  cli.add<bool>("--fp16",
+  cli.add<bool>(
+      "--fp16",
       "Shortcut for mixed precision inference with float16, corresponds to: --precision float16");
   cli.add<std::vector<std::string>>("--precision",
-      "Mixed precision for inference, set parameter type in expression graph. Supported values: float32, float16",
-      {"float32"});
+                                    "Mixed precision for inference, set parameter type in "
+                                    "expression graph. Supported values: float32, float16",
+                                    {"float32"});
 
   cli.add<std::string>("--like",
-      "Set good defaults for supported metric types: comet-qe, comet, bleurt");
+                       "Set good defaults for supported metric types: comet-qe, comet, bleurt");
 
   // Short-cut for Unbabel comet-qe metric
   cli.alias("like", "comet-qe", [](YAML::Node& config) {
     // Model options
-    config["train-sets"] = std::vector<std::string>({"stdin"});
-    config["tsv"] = true;
-    config["tsv-fields"] = 2;
-    config["input-types"] = std::vector<std::string>({"sequence", "sequence"});
-    config["max-length"] = 512;
+    config["train-sets"]      = std::vector<std::string>({"stdin"});
+    config["tsv"]             = true;
+    config["tsv-fields"]      = 2;
+    config["input-types"]     = std::vector<std::string>({"sequence", "sequence"});
+    config["max-length"]      = 512;
     config["max-length-crop"] = true;
-    config["mini-batch"] = 32;
-    config["maxi-batch"] = 100;
+    config["mini-batch"]      = 32;
+    config["maxi-batch"]      = 100;
     config["maxi-batch-sort"] = "src";
-    config["workspace"] = -4000;
-    config["devices"] = std::vector<std::string>({"all"});
+    config["workspace"]       = -4000;
+    config["devices"]         = std::vector<std::string>({"all"});
   });
 
   // Short-cut for Unbabel comet metric
   cli.alias("like", "comet", [cli](YAML::Node& config) {
     // Model options
-    config["train-sets"] = std::vector<std::string>({"stdin"});
-    config["tsv"] = true;
-    config["tsv-fields"] = 3;
-    config["input-types"] = std::vector<std::string>({"sequence", "sequence", "sequence"});
-    config["max-length"] = 512;
+    config["train-sets"]      = std::vector<std::string>({"stdin"});
+    config["tsv"]             = true;
+    config["tsv-fields"]      = 3;
+    config["input-types"]     = std::vector<std::string>({"sequence", "sequence", "sequence"});
+    config["max-length"]      = 512;
     config["max-length-crop"] = true;
-    config["mini-batch"] = 32;
-    config["maxi-batch"] = 100;
+    config["mini-batch"]      = 32;
+    config["maxi-batch"]      = 100;
     config["maxi-batch-sort"] = "src";
-    config["workspace"] = -4000;
-    config["devices"] = std::vector<std::string>({"all"});
+    config["workspace"]       = -4000;
+    config["devices"]         = std::vector<std::string>({"all"});
   });
 
   // Short-cut for Google bleurt metric
   cli.alias("like", "bleurt", [](YAML::Node& config) {
     // Model options
-    config["train-sets"] = std::vector<std::string>({"stdin"});
-    config["tsv"] = true;
-    config["tsv-fields"] = 2;
-    config["input-types"] = std::vector<std::string>({"sequence", "sequence"});
-    config["max-length"] = 512;
+    config["train-sets"]      = std::vector<std::string>({"stdin"});
+    config["tsv"]             = true;
+    config["tsv-fields"]      = 2;
+    config["input-types"]     = std::vector<std::string>({"sequence", "sequence"});
+    config["max-length"]      = 512;
     config["max-length-crop"] = true;
-    config["mini-batch"] = 32;
-    config["maxi-batch"] = 100;
+    config["mini-batch"]      = 32;
+    config["maxi-batch"]      = 100;
     config["maxi-batch-sort"] = "src";
-    config["workspace"] = -4000;
-    config["devices"] = std::vector<std::string>({"all"});
+    config["workspace"]       = -4000;
+    config["devices"]         = std::vector<std::string>({"all"});
   });
 
   cli.switchGroup(previous_group);
   // clang-format on
 }
-
 
 void ConfigParser::addSuboptionsDevices(cli::CLIWrapper& cli) {
   // clang-format off
@@ -1043,8 +1048,8 @@ void ConfigParser::addSuboptionsDevices(cli::CLIWrapper& cli) {
 }
 
 void ConfigParser::addSuboptionsBatching(cli::CLIWrapper& cli) {
-  int defaultMiniBatch = (mode_ == cli::mode::translation) ? 1 : 64;
-  int defaultMaxiBatch = (mode_ == cli::mode::translation) ? 1 : 100;
+  int defaultMiniBatch             = (mode_ == cli::mode::translation) ? 1 : 64;
+  int defaultMaxiBatch             = (mode_ == cli::mode::translation) ? 1 : 100;
   std::string defaultMaxiBatchSort = (mode_ == cli::mode::translation) ? "none" : "trg";
 
   // clang-format off
@@ -1183,10 +1188,12 @@ void ConfigParser::addSuboptionsQuantization(cli::CLIWrapper& cli) {
   // clang-format on
 }
 
-cli::mode ConfigParser::getMode() const { return mode_; }
+cli::mode ConfigParser::getMode() const {
+  return mode_;
+}
 
 Ptr<Options> ConfigParser::parseOptions(int argc, char** argv, bool doValidate) {
-  cmdLine_ = escapeCmdLine(argc,argv);
+  cmdLine_ = escapeCmdLine(argc, argv);
 
   // parse command-line options and fill wrapped YAML config
   cli_.parse(argc, argv);
@@ -1203,15 +1210,15 @@ Ptr<Options> ConfigParser::parseOptions(int argc, char** argv, bool doValidate) 
 
   auto buildInfo = get<std::string>("build-info");
   if(!buildInfo.empty() && buildInfo != "false") {
-#ifdef BUILD_INFO_AVAILABLE // cmake build options are not available on MSVC based build.
+#ifdef BUILD_INFO_AVAILABLE  // cmake build options are not available on MSVC based build.
     if(buildInfo == "all")
       std::cerr << cmakeBuildOptionsAdvanced() << std::endl;
     else
       std::cerr << cmakeBuildOptions() << std::endl;
     exit(0);
-#else // BUILD_INFO_AVAILABLE
+#else   // BUILD_INFO_AVAILABLE
     ABORT("build-info is not available on MSVC based build unless compiled via CMake.");
-#endif // BUILD_INFO_AVAILABLE
+#endif  // BUILD_INFO_AVAILABLE
   }
 
   // get paths to extra config files
@@ -1219,8 +1226,8 @@ Ptr<Options> ConfigParser::parseOptions(int argc, char** argv, bool doValidate) 
   if(!configPaths.empty()) {
     auto config = loadConfigFiles(configPaths);
     cli_.updateConfig(config,
-                     cli::OptionPriority::ConfigFile,
-                     "There are option(s) in a config file that are not expected");
+                      cli::OptionPriority::ConfigFile,
+                      "There are option(s) in a config file that are not expected");
   }
 
   if(get<bool>("interpolate-env-vars")) {
@@ -1234,7 +1241,7 @@ Ptr<Options> ConfigParser::parseOptions(int argc, char** argv, bool doValidate) 
     // Assume the input will come from STDIN if --tsv is set but no --train-sets are given
     if(get<bool>("tsv") && trainSets.empty()) {
       config["train-sets"].push_back("stdin");
-    // Assume the input is in TSV format if --train-sets is set to "stdin"
+      // Assume the input is in TSV format if --train-sets is set to "stdin"
     } else if(trainSets.size() == 1 && (trainSets[0] == "stdin" || trainSets[0] == "-")) {
       config["tsv"] = true;
     }
@@ -1283,14 +1290,14 @@ Ptr<Options> ConfigParser::parseOptions(int argc, char** argv, bool doValidate) 
           ABORT_IF(has("guided-alignment") && get<std::string>("guided-alignment") != "none",
                    "You must use either guided-alignment or 'alignment' in input-types");
           config["guided-alignment"] = std::to_string(i);
-          seenAligns = true;
+          seenAligns                 = true;
         }
         if(inputTypes[i] == "weight") {
           ABORT_IF(seenWeight, "You can specify 'weight' only once in input-types");
           ABORT_IF(has("data-weighting") && !get<std::string>("data-weighting").empty(),
                    "You must use either data-weighting or 'weight' in input-types");
           config["data-weighting"] = std::to_string(i);
-          seenWeight = true;
+          seenWeight               = true;
         }
       }
       if(!config.IsNull())
@@ -1300,7 +1307,7 @@ Ptr<Options> ConfigParser::parseOptions(int argc, char** argv, bool doValidate) 
     }
   }
 
-#if 0 // @TODO: remove once fully deprecated
+#if 0  // @TODO: remove once fully deprecated
   // Convert --after-batches N to --after Nu and --after-epochs N to --after Ne, different values get concatenated with ","
   if(mode_ == cli::mode::training && get<size_t>("after-epochs") > 0) {
     auto afterValue = get<size_t>("after-epochs");
@@ -1348,7 +1355,7 @@ std::vector<std::string> ConfigParser::findConfigPaths() {
   std::vector<std::string> paths;
 
   bool interpolateEnvVars = get<bool>("interpolate-env-vars");
-  bool loadConfig = !config_["config"].as<std::vector<std::string>>().empty();
+  bool loadConfig         = !config_["config"].as<std::vector<std::string>>().empty();
 
   if(loadConfig) {
     paths = config_["config"].as<std::vector<std::string>>();
@@ -1382,9 +1389,9 @@ YAML::Node ConfigParser::loadConfigFiles(const std::vector<std::string>& paths) 
     if(config["relative-paths"] && config["relative-paths"].as<bool>()) {
       // interpolate environment variables if requested in this config file or
       // via command-line options
-      bool interpolateEnvVars = (config["interpolate-env-vars"]
-                                 && config["interpolate-env-vars"].as<bool>())
-                                || get<bool>("interpolate-env-vars");
+      bool interpolateEnvVars
+          = (config["interpolate-env-vars"] && config["interpolate-env-vars"].as<bool>())
+            || get<bool>("interpolate-env-vars");
       if(interpolateEnvVars)
         cli::processPaths(config, cli::interpolateEnvVars, PATHS);
 
