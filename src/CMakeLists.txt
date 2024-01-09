@@ -240,7 +240,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
   set_target_properties(marian_swapper PROPERTIES OUTPUT_NAME marian-swapper)
   target_compile_options(marian_swapper PRIVATE ${ALL_WARNINGS})
 
-  set(EXECUTABLES ${EXECUTABLES} marian_train marian_decoder marian_scorer marian_vocab marian_conv)
+  set(EXECUTABLES ${EXECUTABLES} marian_train marian_decoder marian_scorer marian_vocab marian_conv marian_swapper)
 
   # generate the tgz file via a custom script. This will always re-create the tarball
   add_custom_target(marian_tgz
