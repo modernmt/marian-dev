@@ -197,6 +197,9 @@ if(CUDA_FOUND)
     translator/helpers.cu
     STATIC)
 
+  set_target_properties(marian_cuda PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+  set_target_properties(marian_cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
   target_compile_options(marian_cuda PRIVATE ${ALL_WARNINGS})
   # make sure all local dependencies are installed first before this is built
   add_dependencies(marian_cuda 3rd_party_installs)
