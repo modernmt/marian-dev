@@ -37,6 +37,7 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   uint64_t numHeaders = *get<uint64_t>(current); // number of item headers that follow
   const Header* headers = get<Header>(current, numHeaders); // read that many headers
 
+  std::cerr << "void loadItems(...) numHeaders:" << numHeaders << std::endl;
   // prepopulate items with meta data from headers
   items.resize(numHeaders);
   for(int i = 0; i < numHeaders; ++i) {
@@ -44,13 +45,14 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
     items[i].name = get<char>(current, headers[i].nameLength);
     items[i].mapped = mapped;
   }
+    printItems(items);
 
   // read in actual shape and data
   for(int i = 0; i < numHeaders; ++i) {
     uint64_t len = headers[i].shapeLength;
     items[i].shape.resize(len); 
     const int* arr = get<int>(current, len); // read shape
-    std::copy(arr, arr + len, items[i].shape.begin()); // copy to Item::shape 
+    std::copy(arr, arr + len, items[i].shape.begin()); // copy to Item::shape
   }
 
   // move by offset bytes, aligned to 256-bytes boundary
@@ -176,6 +178,28 @@ void saveItems(const std::string& fileName,
                                                       // No version-bump required. Gets 5-8% of speed back when mmapped.
 }
 
+    void printItems(const std::vector <io::Item> &items) {
+        //print items
+        std::cerr << "Size:" << items.size() << std::endl
+        for(int i = 0; i < items.size(); ++i) {
+            auto item = items[i];
+            std::cerr << "i:" << i
+                      << " name :" << items[i].name
+                      << " type:" << items[i].type
+                      << " mapped:" << items[i].mapped
+                      << " item.shapeLength:" << items[i].shapeLength << std::endl;
+        }
+    }
+
+    void convertItems(const std::vector<io::Item>& items, Type toType) {
+        //convert all floating point item into the specified floating point (toType)
+        for(auto item : items) {
+            if (!marian::isFloat(item.type))
+                continue;
+            if (item.type != toType){
+                item.convert(toType);
+        }
+    }
 }  // namespace binary
 }  // namespace io
 }  // namespace marian
