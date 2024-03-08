@@ -22,9 +22,7 @@ void saveItems(const std::string& fileName, const std::vector<io::Item>& items);
 
 void convertItems(const std::vector<io::Item>& items, Type toType = marian::Type::float16);
 
-void convertItems(const std::vector<io::Item>& items, const std::string& toType) {
-  io::binary::convertItems(items, marian::typeFromString(toType));
-}
+void convertItems(const std::vector<io::Item>& items, const std::string& toType);
 
 void printItems(const std::vector<io::Item>& items);
 

@@ -200,6 +200,12 @@ void convertItems(const std::vector<io::Item>& items, Type toType) {
       item.convert(toType);
   }
 }
+
+
+void convertItems(const std::vector<io::Item>& items, const std::string& toType) {
+  //convert all floating point item into the specified floating point (toType)
+  io::binary::convertItems(items, marian::typeFromString(toType));
+}
 }  // namespace binary
 }  // namespace io
 }  // namespace marian
