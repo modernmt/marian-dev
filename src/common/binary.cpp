@@ -141,10 +141,11 @@ void saveItems(const std::string& fileName,
 
   std::vector<Header> headers;
   for(const auto& item : items) {
-    headers.push_back(Header{item.name.size() + 1,
-                             (uint64_t)item.type,
-                             item.shape.size(),
-                             item.bytes.size()}); // binary item size with padding, will be 256-byte-aligned
+    headers.push_back(
+        Header{item.name.size() + 1,
+               (uint64_t)item.type,
+               item.shape.size(),
+               item.bytes.size()});  // binary item size with padding, will be 256-byte-aligned
   }
 
   uint64_t headerSize = headers.size();
@@ -162,7 +163,7 @@ void saveItems(const std::string& fileName,
 
   // align to next 256-byte boundary
   uint64_t nextpos = ((pos + sizeof(uint64_t)) / 256 + 1) * 256;
-  uint64_t offset = nextpos - pos - sizeof(uint64_t);
+  uint64_t offset  = nextpos - pos - sizeof(uint64_t);
 
   pos += out.write(&offset);
   for(uint64_t i = 0; i < offset; i++) {
@@ -172,34 +173,33 @@ void saveItems(const std::string& fileName,
 
   // Write out all values
   for(const auto& item : items)
-    pos += out.write(item.data(), item.bytes.size()); // writes out data with padding, keeps 256-byte boundary. 
-                                                      // Amazingly this is binary-compatible with V1 and aligned and 
-                                                      // non-aligned models can be read with the same procedure.
-                                                      // No version-bump required. Gets 5-8% of speed back when mmapped.
+    pos += out.write(item.data(),
+                     item.bytes.size());  // writes out data with padding, keeps 256-byte boundary.
+        // Amazingly this is binary-compatible with V1 and aligned and
+        // non-aligned models can be read with the same procedure.
+        // No version-bump required. Gets 5-8% of speed back when mmapped.
 }
 
-    void printItems(const std::vector <io::Item> &items) {
-        //print items
-        std::cerr << "Size:" << items.size() << std::endl
-        for(int i = 0; i < items.size(); ++i) {
-            auto item = items[i];
-            std::cerr << "i:" << i
-                      << " name :" << items[i].name
-                      << " type:" << items[i].type
-                      << " mapped:" << items[i].mapped
-                      << " item.shapeLength:" << items[i].shapeLength << std::endl;
-        }
-    }
+void printItems(const std::vector <io::Item> &items) {
+  //print items
+  std::cerr << "Size:" << items.size() << std::endl;
+  for(int i = 0; i < items.size(); ++i) {
+    auto item = items[i];
+    std::cerr << "i:" << i << " name :" << items[i].name << " type:" << items[i].type
+              << " mapped:" << items[i].mapped << " shape:" << items[i].shape << std::endl;
+  }
+}
 
-    void convertItems(const std::vector<io::Item>& items, Type toType) {
-        //convert all floating point item into the specified floating point (toType)
-        for(auto item : items) {
-            if (!marian::isFloat(item.type))
-                continue;
-            if (item.type != toType){
-                item.convert(toType);
-        }
-    }
+
+void convertItems(const std::vector<io::Item>& items, Type toType) {
+  //convert all floating point item into the specified floating point (toType)
+  for(auto item : items) {
+    if(!marian::isFloat(item.type))
+      continue;
+    if(item.type != toType)
+      item.convert(toType);
+  }
+}
 }  // namespace binary
 }  // namespace io
 }  // namespace marian

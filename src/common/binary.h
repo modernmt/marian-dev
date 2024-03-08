@@ -20,10 +20,10 @@ io::Item getItem(const std::string& fileName, const std::string& vName);
 
 void saveItems(const std::string& fileName, const std::vector<io::Item>& items);
 
-void convertItems(const std::vector<io::Item>& items, Type toType = marian::float16);
+void convertItems(const std::vector<io::Item>& items, Type toType = marian::Type::float16);
 
 void convertItems(const std::vector<io::Item>& items, const std::string& toType) {
-  io::binary::convertItems(model, marian::typeFromString(toType));
+  io::binary::convertItems(items, marian::typeFromString(toType));
 }
 
 void printItems(const std::vector<io::Item>& items);
