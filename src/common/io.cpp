@@ -167,13 +167,13 @@ void saveItemsNpz(const std::string& fileName, const std::vector<Item>& items) {
     else if(item.type == Type::uint32)  type = cnpy::map_type(typeid(uint32_t));
     else if(item.type == Type::uint64)  type = cnpy::map_type(typeid(uint64_t));
     else ABORT("Other types ({}) not supported", item.type);
-      
     npzItems.emplace_back(item.name, item.bytes, shape, type, sizeOf(item.type));
   }
   cnpy::npz_save(fileName, npzItems);
 }
 
 void saveItems(const std::string& fileName, const std::vector<Item>& items) {
+  std::cerr << "void saveItems(const std::string& fileName, const std::vector<Item>& items) fileName:" << fileName << std::endl;
   if(isNpz(fileName)) {
     saveItemsNpz(fileName, items);
   } else if(isBin(fileName)) {
@@ -181,6 +181,40 @@ void saveItems(const std::string& fileName, const std::vector<Item>& items) {
   } else {
     ABORT("Unknown file format for file {}", fileName);
   }
+}
+
+
+void printItems(const std::vector <io::Item> &items) {
+  //print items
+  std::cerr << "Size:" << items.size() << std::endl;
+  for(int i = 0; i < items.size(); ++i) {
+    std::cerr << "i:" << i << " name:" << items[i].name << " type:" << items[i].type
+              << " mapped:" << items[i].mapped << " shape:" << items[i].shape << std::endl;
+  }
+}
+
+void inspectItems(const std::vector <io::Item> &items, int i) {
+  //print items
+  std::cerr << "Size:" << items.size() << std::endl;
+  std::cerr << "i:" << i << " name:" << items[i].name << " type:" << items[i].type
+            << " mapped:" << items[i].mapped << " shape:" << items[i].shape << " items[i].bytes.size():" << items[i].bytes.size() << std::endl;
+
+}
+
+void convertItems(std::vector<io::Item>& items, Type toType) {
+  //convert all floating point item into the specified floating point (toType)
+  for(auto item : items) {
+    if(!marian::isFloat(item.type))
+      continue;
+    if(item.type != toType)
+      item.convert(toType);
+  }
+}
+
+
+void convertItems(std::vector<io::Item>& items, const std::string& toType) {
+  //convert all floating point item into the specified floating point (toType)
+  io::convertItems(items, marian::typeFromString(toType));
 }
 
 }  // namespace io
