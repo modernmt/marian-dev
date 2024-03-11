@@ -37,8 +37,7 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   uint64_t numHeaders = *get<uint64_t>(current); // number of item headers that follow
   const Header* headers = get<Header>(current, numHeaders); // read that many headers
 
-  std::cerr << "void binary::loadItems(const void* current, std::vector<io::Item>& items, bool mapped) mapped:" << mapped << std::endl;
-  std::cerr << "void binary::loadItems(const void* current, std::vector<io::Item>& items, bool mapped) numHeaders:" << numHeaders << std::endl;
+  std::cerr << "void binary::loadItems(const void* current, std::vector<io::Item>& items, bool mapped) mapped:" << mapped << " numHeaders:" << numHeaders << std::endl;
   // prepopulate items with meta data from headers
   items.resize(numHeaders);
   for(int i = 0; i < numHeaders; ++i) {
@@ -87,12 +86,11 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
       }
     }
   }
-  std::cerr << "End of loadItems()" std::endl;
+  std::cerr << "End of loadItems()" << std::endl;
   io::printItems(items);
 }
 
 void loadItems(const std::string& fileName, std::vector<io::Item>& items) {
-  std::cerr << "binary::loadItems(const std::string& fileName, std::vector<io::Item>& items) START" std::endl;
   // Read file into buffer
   uint64_t fileSize = filesystem::fileSize(fileName);
   std::vector<char> buf(fileSize);
@@ -107,11 +105,9 @@ void loadItems(const std::string& fileName, std::vector<io::Item>& items) {
   io::InputFileStream in(fileName);
   in.read(buf.data(), buf.size());
 #endif
-  std::cerr << "binary::loadItems(const std::string& fileName, std::vector<io::Item>& items) HERE" std::endl;
 
   // Load items from buffer without mapping
   loadItems(buf.data(), items, false);
-  std::cerr << "binary::loadItems(const std::string& fileName, std::vector<io::Item>& items) END" std::endl;
 }
 
 io::Item getItem(const void* current, const std::string& varName) {
