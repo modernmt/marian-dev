@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   std::vector<io::Item> items_fp16 = io::loadItems(model_npz_fp32);
 
   LOG(info, "items_fp16 converting into {}", "float16");
-  io::binary::convertItems2(items_fp16, "float16");
+  io::convertItems(items_fp16, "float16");
 
   LOG(info, "items_fp16 npz saving into {}", model_npz_fp16);
   io::saveItems(model_npz_fp16, items_fp16);
