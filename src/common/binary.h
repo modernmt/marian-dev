@@ -20,12 +20,6 @@ io::Item getItem(const std::string& fileName, const std::string& vName);
 
 void saveItems(const std::string& fileName, const std::vector<io::Item>& items);
 
-void convertItems(const std::vector<io::Item>& items, Type toType = marian::Type::float16);
-
-void convertItems(const std::vector<io::Item>& items, const std::string& toType);
-
-void printItems(const std::vector<io::Item>& items);
-
 }  // namespace binary
 }  // namespace io
 }  // namespace marian
