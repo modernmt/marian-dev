@@ -1,6 +1,7 @@
 #include "common/binary.h"
 #include "common/definitions.h"
 #include "common/file_stream.h"
+#include "common/io.h"
 #include "common/io_item.h"
 #include "common/types.h"
 #include "tensors/cpu/integer_common.h"
