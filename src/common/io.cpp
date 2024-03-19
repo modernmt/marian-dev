@@ -184,31 +184,60 @@ void saveItems(const std::string& fileName, const std::vector<Item>& items) {
 }
 
 
-void printItems(const std::vector <io::Item> &items) {
+void printItems(const std::vector <io::Item> &items, bool list) {
   //print items
   std::cerr << "Size:" << items.size() << std::endl;
-  for(int i = 0; i < items.size(); ++i) {
-    std::cerr << "i:" << i << " name:" << items[i].name << " type:" << items[i].type
-              << " mapped:" << items[i].mapped << " shape:" << items[i].shape << std::endl;
+
+  if (list) {
+    for(int i = 0; i < items.size(); ++i)
+      std::cerr << items[i].name << std::endl;
+  }
+  else {
+    for(int i = 0; i < items.size(); ++i) {
+      std::cerr << "i:" << i << " name:" << items[i].name << " type:" << items[i].type
+                << " mapped:" << items[i].mapped << " shape:" << items[i].shape << std::endl;
+    }
   }
 }
 
-void inspectItems(const std::vector <io::Item> &items, int i) {
-  //print items
-  std::cerr << "Size:" << items.size() << std::endl;
-  std::cerr << "i:" << i << " name:" << items[i].name << " type:" << items[i].type
-            << " mapped:" << items[i].mapped << " shape:" << items[i].shape << " items[i].bytes.size():" << items[i].bytes.size() << std::endl;
 
+void inspectItems(const std::vector <io::Item> &items, const std::string name) {
+  //print items
+  std::cerr << "Inspecting parameters" << std::endl;
+  std::cerr << "Size:" << items.size() << std::endl;
+  printItems(items, true);
+  for(int i = 0; i < items.size(); ++i) {
+    if(items[i].name == name) {
+      std::cerr << "Parameter " << items[i].name << " has position " << i << std::endl;
+      std::cerr << "mapped:" << items[i].mapped << " type:" << items[i].type << " shape:" << items[i].shape
+                << " items[i].bytes.size():" << items[i].bytes.size() << std::endl;
+      std::cout << "data = ";
+      std::vector<Type::float16> targetVector{items[i].bytes.begin(), items[i].bytes.end()};
+      std::cout << "data size = " << targetVector.size() << std::endl;
+      for (float f: targetVector)
+        std::cout << f << std::endl;
+    }
+    break;
+  }
 }
+
 
 void convertItems(std::vector<io::Item>& items, Type toType) {
   //convert all floating point item into the specified floating point (toType)
+  for(int i = 0; i < items.size(); ++i) {
+    if(!marian::isFloat(items[i].type))
+      continue;
+    if(items[i].type != toType)
+      items[i].convert(toType);
+  }
+  /*
   for(auto item : items) {
     if(!marian::isFloat(item.type))
       continue;
     if(item.type != toType)
       item.convert(toType);
   }
+  */
 }
 
 
@@ -217,5 +246,5 @@ void convertItems(std::vector<io::Item>& items, const std::string& toType) {
   io::convertItems(items, marian::typeFromString(toType));
 }
 
-}  // namespace io
-}  // namespace marian
+} // namespace io
+} // namespace marian
