@@ -201,27 +201,6 @@ void printItems(const std::vector <io::Item> &items, bool list) {
 }
 
 
-void inspectItems(const std::vector <io::Item> &items, const std::string name) {
-  //print items
-  std::cerr << "Inspecting parameters" << std::endl;
-  std::cerr << "Size:" << items.size() << std::endl;
-  printItems(items, true);
-  for(int i = 0; i < items.size(); ++i) {
-    if(items[i].name == name) {
-      std::cerr << "Parameter " << items[i].name << " has position " << i << std::endl;
-      std::cerr << "mapped:" << items[i].mapped << " type:" << items[i].type << " shape:" << items[i].shape
-                << " items[i].bytes.size():" << items[i].bytes.size() << std::endl;
-      std::cout << "data = ";
-      std::vector<Type::float16> targetVector{items[i].bytes.begin(), items[i].bytes.end()};
-      std::cout << "data size = " << targetVector.size() << std::endl;
-      for (float f: targetVector)
-        std::cout << f << std::endl;
-    }
-    break;
-  }
-}
-
-
 void convertItems(std::vector<io::Item>& items, Type toType) {
   //convert all floating point item into the specified floating point (toType)
   for(int i = 0; i < items.size(); ++i) {
