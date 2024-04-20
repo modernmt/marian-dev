@@ -184,23 +184,6 @@ void saveItems(const std::string& fileName, const std::vector<Item>& items) {
 }
 
 
-void printItems(const std::vector <io::Item> &items, bool list) {
-  //print items
-  std::cerr << "Size:" << items.size() << std::endl;
-
-  if (list) {
-    for(int i = 0; i < items.size(); ++i)
-      std::cerr << items[i].name << std::endl;
-  }
-  else {
-    for(int i = 0; i < items.size(); ++i) {
-      std::cerr << "i:" << i << " name:" << items[i].name << " type:" << items[i].type
-                << " mapped:" << items[i].mapped << " shape:" << items[i].shape << std::endl;
-    }
-  }
-}
-
-
 void convertItems(std::vector<io::Item>& items, Type toType) {
   //convert all floating point item into the specified floating point (toType)
   for(int i = 0; i < items.size(); ++i) {
@@ -209,14 +192,6 @@ void convertItems(std::vector<io::Item>& items, Type toType) {
     if(items[i].type != toType)
       items[i].convert(toType);
   }
-  /*
-  for(auto item : items) {
-    if(!marian::isFloat(item.type))
-      continue;
-    if(item.type != toType)
-      item.convert(toType);
-  }
-  */
 }
 
 

@@ -38,8 +38,6 @@ void convertItems(std::vector<io::Item>& items, Type toType = marian::Type::floa
 
 void convertItems(std::vector<io::Item>& items, const std::string& toType);
 
-void printItems(const std::vector<io::Item>& items, bool list=false);
-
 /**
  * Creates a flat io::Item from a given std::vector so that it can be saved in a npz file 
  * or Marian's native binary format with the given name.

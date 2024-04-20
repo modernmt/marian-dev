@@ -87,8 +87,6 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
       }
     }
   }
-  std::cerr << "End of loadItems()" << std::endl;
-  io::printItems(items);
 }
 
 void loadItems(const std::string& fileName, std::vector<io::Item>& items) {

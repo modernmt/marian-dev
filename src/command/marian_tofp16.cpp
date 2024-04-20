@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
   auto model_bin_fp32 = modelFromPath + "/model.bin";
   auto model_npz_fp32 = modelToPath + "/npz_fp32_model.npz";
   auto model_npz_fp16 = modelToPath + "/npz_fp16_model.npz";
-  auto model_bin_fp16 = modelToPath + "/bin_fp16_model.bin";
+  auto model_bin_fp16 = modelToPath + "/model.bin";
 
   LOG(info, "loading fp32 items from bin model ({})", model_bin_fp32);
   std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32);
