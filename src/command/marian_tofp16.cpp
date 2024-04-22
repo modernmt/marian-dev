@@ -1,7 +1,9 @@
+#include <filesystem>
 #include "marian.h"
 #include "common/binary.h"
 
 using namespace marian;
+namespace fs = std::filesystem;
 
 int main(int argc, char** argv) {
   using namespace marian;
@@ -15,38 +17,69 @@ int main(int argc, char** argv) {
         "Convert a model from fp32 to fp16",
         "Examples:\n"
         "  ./marian-tofp16 -f model.bin -t model.bin");
-    cli->add<std::string>("--from,-f", "Input path", "model");
-    cli->add<std::string>("--to,-t", "Output path", "model");
+    cli->add<std::string>("--from,-f", "Path to dir containing the model to convert");
+    cli->add<std::string>("--to,-t", "Path to directory where to store the new model.");
     cli->parse(argc, argv);
     options->merge(config);
   }
 
-  auto modelFromPath = options->get<std::string>("from");
-  auto modelToPath = options->get<std::string>("to");
+  fs::path fromPath = fs::path(options->get<std::string>("from"));
+  fs::path toPath = fs::path(options->get<std::string>("to"));
 
-  auto model_bin_fp32 = modelFromPath + "/model.bin";
-  auto model_npz_fp32 = modelToPath + "/npz_fp32_model.npz";
-  auto model_npz_fp16 = modelToPath + "/npz_fp16_model.npz";
-  auto model_bin_fp16 = modelToPath + "/model.bin";
+  ABORT_IF(!fs::exists(fromPath) || fs::is_empty(fromPath) ,
+           "Specified input directory {} does not exist, or it is empty",
+           fromPath.string());
+  ABORT_IF(fs::exists(toPath),
+           "Specified output directory {} already exists; please remote it.",
+           toPath.string());
 
-  LOG(info, "loading fp32 items from bin model ({})", model_bin_fp32);
-  std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32);
+  auto tmpPath = fs::temp_directory_path();
+  std::svector<std::string> models = std::vector<std::string>({"model.bin", "model.optimizer.bin"});
 
-  LOG(info, "saving fp32 items into npz model ({})", model_npz_fp32);
-  io::saveItems(model_npz_fp32, items_fp32);
 
-  LOG(info, "\"loading fp32 items from npz model ({})", model_npz_fp32);
-  std::vector<io::Item> items_fp16 = io::loadItems(model_npz_fp32);
+  LOG(info,
+      "Copy input model directory ({}) into output model directory ({})",
+      fromPath.string(),
+      toPath.string());
+  std::filesystem::copy(
+      fromPath.string(), toPath.string(), std::filesystem::copy_options::recursive);
 
-  LOG(info, "converting npz items from fp32 into fp16");
-  io::convertItems(items_fp16, "float16");
+  for (auto model : models) {
 
-  LOG(info, "saving fp16 items into npz model ({})", model_npz_fp16);
-  io::saveItems(model_npz_fp16, items_fp16);
+    fs::path model_bin_fp32 = fromPath / model;
+    fs::path model_bin_fp16 = toPath / model;
+    fs::path model_npz_fp32 = tmpPath / "model_fp32.npz";
+    fs::path model_npz_fp16 = tmpPath / "model_fp16.npz";
 
-  LOG(info, "saving fp16 items into bin model ({})", model_bin_fp16);
-  io::saveItems(model_bin_fp16, items_fp16);
+    if (!fs::exists(model_bin_fp32))
+      continue;
 
+    LOG(info,
+        "remove binary model ({}) from output model directory ({})",
+        model_bin_fp32.string(), toPath.string());
+    fs::remove(model_bin_fp16);
+
+    LOG(info, "Loading fp32 items from bin model ({})", model_bin_fp32.string());
+    std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32.string());
+
+    LOG(info, "Saving fp32 items into npz model ({})", model_npz_fp32.string());
+    io::saveItems(model_npz_fp32.string(), items_fp32);
+
+    LOG(info, "Loading fp32 items from npz model ({})", model_npz_fp32.string());
+    std::vector<io::Item> items_fp16 = io::loadItems(model_npz_fp32.string());
+
+    LOG(info, "Converting npz items from fp32 into fp16");
+    io::convertItems(items_fp16, "float16");
+
+    LOG(info, "Saving fp16 items into npz model ({})", model_npz_fp16.string());
+    io::saveItems(model_npz_fp16.string(), items_fp16);
+
+    LOG(info, "Saving fp16 items into bin model ({})", model_bin_fp16.string());
+    io::saveItems(model_bin_fp16.string(), items_fp16);
+
+    fs::remove(model_npz_fp32);
+    fs::remove(model_npz_fp16);
+  }
   LOG(info, "Finished");
 
   return 0;
