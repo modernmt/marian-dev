@@ -1,6 +1,7 @@
 #include "common/binary.h"
 #include "common/definitions.h"
 #include "common/file_stream.h"
+#include "common/io.h"
 #include "common/io_item.h"
 #include "common/types.h"
 #include "tensors/cpu/integer_common.h"
@@ -37,6 +38,7 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   uint64_t numHeaders = *get<uint64_t>(current); // number of item headers that follow
   const Header* headers = get<Header>(current, numHeaders); // read that many headers
 
+  std::cerr << "void binary::loadItems(const void* current, std::vector<io::Item>& items, bool mapped) mapped:" << mapped << " numHeaders:" << numHeaders << std::endl;
   // prepopulate items with meta data from headers
   items.resize(numHeaders);
   for(int i = 0; i < numHeaders; ++i) {
@@ -50,7 +52,7 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
     uint64_t len = headers[i].shapeLength;
     items[i].shape.resize(len); 
     const int* arr = get<int>(current, len); // read shape
-    std::copy(arr, arr + len, items[i].shape.begin()); // copy to Item::shape 
+    std::copy(arr, arr + len, items[i].shape.begin()); // copy to Item::shape
   }
 
   // move by offset bytes, aligned to 256-bytes boundary
@@ -139,10 +141,11 @@ void saveItems(const std::string& fileName,
 
   std::vector<Header> headers;
   for(const auto& item : items) {
-    headers.push_back(Header{item.name.size() + 1,
-                             (uint64_t)item.type,
-                             item.shape.size(),
-                             item.bytes.size()}); // binary item size with padding, will be 256-byte-aligned
+    headers.push_back(
+        Header{item.name.size() + 1,
+               (uint64_t)item.type,
+               item.shape.size(),
+               item.bytes.size()});  // binary item size with padding, will be 256-byte-aligned
   }
 
   uint64_t headerSize = headers.size();
@@ -160,7 +163,7 @@ void saveItems(const std::string& fileName,
 
   // align to next 256-byte boundary
   uint64_t nextpos = ((pos + sizeof(uint64_t)) / 256 + 1) * 256;
-  uint64_t offset = nextpos - pos - sizeof(uint64_t);
+  uint64_t offset  = nextpos - pos - sizeof(uint64_t);
 
   pos += out.write(&offset);
   for(uint64_t i = 0; i < offset; i++) {
@@ -170,10 +173,11 @@ void saveItems(const std::string& fileName,
 
   // Write out all values
   for(const auto& item : items)
-    pos += out.write(item.data(), item.bytes.size()); // writes out data with padding, keeps 256-byte boundary. 
-                                                      // Amazingly this is binary-compatible with V1 and aligned and 
-                                                      // non-aligned models can be read with the same procedure.
-                                                      // No version-bump required. Gets 5-8% of speed back when mmapped.
+    pos += out.write(item.data(),
+                     item.bytes.size());  // writes out data with padding, keeps 256-byte boundary.
+        // Amazingly this is binary-compatible with V1 and aligned and
+        // non-aligned models can be read with the same procedure.
+        // No version-bump required. Gets 5-8% of speed back when mmapped.
 }
 
 }  // namespace binary

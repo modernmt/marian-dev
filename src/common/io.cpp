@@ -167,13 +167,13 @@ void saveItemsNpz(const std::string& fileName, const std::vector<Item>& items) {
     else if(item.type == Type::uint32)  type = cnpy::map_type(typeid(uint32_t));
     else if(item.type == Type::uint64)  type = cnpy::map_type(typeid(uint64_t));
     else ABORT("Other types ({}) not supported", item.type);
-      
     npzItems.emplace_back(item.name, item.bytes, shape, type, sizeOf(item.type));
   }
   cnpy::npz_save(fileName, npzItems);
 }
 
 void saveItems(const std::string& fileName, const std::vector<Item>& items) {
+  std::cerr << "void saveItems(const std::string& fileName, const std::vector<Item>& items) fileName:" << fileName << std::endl;
   if(isNpz(fileName)) {
     saveItemsNpz(fileName, items);
   } else if(isBin(fileName)) {
@@ -183,5 +183,22 @@ void saveItems(const std::string& fileName, const std::vector<Item>& items) {
   }
 }
 
-}  // namespace io
-}  // namespace marian
+
+void convertItems(std::vector<io::Item>& items, Type toType) {
+  //convert all floating point item into the specified floating point (toType)
+  for(int i = 0; i < items.size(); ++i) {
+    if(!marian::isFloat(items[i].type))
+      continue;
+    if(items[i].type != toType)
+      items[i].convert(toType);
+  }
+}
+
+
+void convertItems(std::vector<io::Item>& items, const std::string& toType) {
+  //convert all floating point item into the specified floating point (toType)
+  io::convertItems(items, marian::typeFromString(toType));
+}
+
+} // namespace io
+} // namespace marian

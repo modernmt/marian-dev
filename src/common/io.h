@@ -34,6 +34,10 @@ std::vector<Item> mmapItems(const void* ptr);
 
 void saveItems(const std::string& fileName, const std::vector<Item>& items);
 
+void convertItems(std::vector<io::Item>& items, Type toType = marian::Type::float16);
+
+void convertItems(std::vector<io::Item>& items, const std::string& toType);
+
 /**
  * Creates a flat io::Item from a given std::vector so that it can be saved in a npz file 
  * or Marian's native binary format with the given name.
