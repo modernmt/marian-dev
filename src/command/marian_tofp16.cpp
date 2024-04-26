@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
            toPath.string());
 
   auto tmpPath = fs::temp_directory_path();
-  std::svector<std::string> models = std::vector<std::string>({"model.bin", "model.optimizer.bin"});
+  std::vector<std::string> models = std::vector<std::string>({"model.bin", "model.optimizer.bin"});
 
 
   LOG(info,
