@@ -14,17 +14,18 @@ bool is_fp16(fs::path from_model_meta) {
   while(getline(in, line)) {
     line = std::regex_replace(line, std::regex("^ +"), "");
 
-    if(line.size() > 0) {
-      if(line.rfind("[model]")) {
+    if (line.size() > 0) {
+      if (line.rfind("[model]") != std::string::npos) {
         model_section = true;
-      } else if (line.size() > 0 && line.rfind("[")) {
+      } else if (line.size() > 0 && line.rfind("[") != std::string::npos) {
         model_section = false;
       }
     }
-    if(model_section) {
-      if(line.size() > 0 && line.rfind("model_precision")) {
+
+    if (model_section) {
+      if (line.size() > 0 && line.rfind("model_precision") != std::string::npos) {
         line = std::regex_replace(line, std::regex("^ +"), "");
-        if(line.rfind("fp16")) {
+        if (line.rfind("fp16") != std::string::npos) {
           return true;
         }
       }
@@ -41,8 +42,7 @@ void convert_meta_info(fs::path from_model_meta, fs::path to_model_meta) {
   fs::path tmpPath;
   if (fs::equivalent(from_model_meta, to_model_meta)) {
       equivalent = true;
-      tmpPath = fs::temp_directory_path();
-      out_model_meta = tmpPath / "model_meta";
+      out_model_meta = fs::temp_directory_path() / "model_meta";
     }
   else {
     out_model_meta = to_model_meta;
@@ -56,14 +56,15 @@ void convert_meta_info(fs::path from_model_meta, fs::path to_model_meta) {
     line = std::regex_replace(line, std::regex("^ +"), "");
 
     if (line.size() > 0) {
-      if (line.rfind("[model]")) {
+      if (line.rfind("[model]") != std::string::npos) {
         model_section = true;
-      } else if (line.size() > 0 && line.rfind("[")) {
+      } else if (line.size() > 0 && line.rfind("[") != std::string::npos) {
         model_section = false;
       }
     }
+
     if (model_section) {
-      if(line.size() > 0 && line.rfind("model_precision")) {
+      if(line.size() > 0 && line.rfind("model_precision") != std::string::npos) {
         line = std::regex_replace(line, std::regex("^ +"), "");
         out << "model_precision = fp16" << std::endl;
       } else {
@@ -73,12 +74,17 @@ void convert_meta_info(fs::path from_model_meta, fs::path to_model_meta) {
       out << line << std::endl;
     }
   }
+
+  if (!model_section) {
+    out << std::endl << "[model]" << std::endl;
+    out << "model_precision = fp16" << std::endl;
+  }
+
   if (equivalent) {
-    fs::remove_all(tmpPath);
-    fs::copy_file(tmpPath / "model.meta", to_model_meta);
+    fs::copy_file(out_model_meta, to_model_meta, fs::copy_options::overwrite_existing);
+    fs::remove(out_model_meta);
   }
 }
-
 
 void convert_model(fs::path fromPath, fs::path toPath) {
 
@@ -87,20 +93,17 @@ void convert_model(fs::path fromPath, fs::path toPath) {
   for(auto model : models) {
     fs::path model_bin_fp32 = fromPath / model;
     fs::path model_bin_fp16 = toPath / model;
-    fs::path model_npz_fp32 = tmpPath / "model_fp32.npz";
-    fs::path model_npz_fp16 = tmpPath / "model_fp16.npz";
+    fs::path model_npz_fp32 = tmpPath / "_fp32.npz";
+    fs::path model_npz_fp16 = tmpPath / "_fp16.npz";
 
     if(!fs::exists(model_bin_fp32))
       continue;
 
-    LOG(info,
-        "remove binary model ({}) from output model directory ({})",
-        model_bin_fp32.string(),
-        toPath.string());
-    fs::remove(model_bin_fp16);
-
     LOG(info, "Loading fp32 items from bin model ({})", model_bin_fp32.string());
     std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32.string());
+
+    LOG(info, "remove binary model ({})", model_bin_fp32.string());
+    fs::remove(model_bin_fp32);
 
     LOG(info, "Saving fp32 items into npz model ({})", model_npz_fp32.string());
     io::saveItems(model_npz_fp32.string(), items_fp32);
@@ -108,16 +111,22 @@ void convert_model(fs::path fromPath, fs::path toPath) {
     LOG(info, "Loading fp32 items from npz model ({})", model_npz_fp32.string());
     std::vector<io::Item> items_fp16 = io::loadItems(model_npz_fp32.string());
 
+    LOG(info, "Removing fp32 npz model ({})", model_npz_fp32.string());
+    fs::remove(model_npz_fp32);
+
     LOG(info, "Converting npz items from fp32 into fp16");
     io::convertItems(items_fp16, "float16");
 
+/*
     LOG(info, "Saving fp16 items into npz model ({})", model_npz_fp16.string());
     io::saveItems(model_npz_fp16.string(), items_fp16);
 
+    LOG(info, "Removing fp16 npz model ({})", model_npz_fp16.string());
+    fs::remove(model_npz_fp16);
+*/
+
     LOG(info, "Saving fp16 items into bin model ({})", model_bin_fp16.string());
     io::saveItems(model_bin_fp16.string(), items_fp16);
-
-    fs::remove_all(tmpPath);
   }
 }
 
@@ -134,9 +143,9 @@ int main(int argc, char** argv) {
         "Examples:\n"
         "  ./marian-tofp16 -f model.bin -t model.bin  # to store the new model onto e new directory\n"
         "  ./marian-tofp16 -f model.bin --overwrite   # to overwriting original model\n");
-    cli->add<std::string>("--from,-f", "Path to dir containing the model to convert".);
+    cli->add<std::string>("--from,-f", "Path to dir containing the model to convert.");
     cli->add<std::string>("--to,-t", "Path to directory where to store the new model.");
-    cli->add<std::string>("--overwrite", "Overwrite the new model onto the original model. Default is false.", false);
+    cli->add<bool>("--overwrite", "Overwrite the new model onto the original model. Default is false.");
     cli->parse(argc, argv);
     options->merge(config);
   }
@@ -154,27 +163,30 @@ int main(int argc, char** argv) {
     ABORT_IF(fs::exists(toPath),
              "Specified output directory {} already exists; please remote it.",
              toPath.string());
+    fs::create_directories(toPath);
   }
 
-  if (is__fp16(fromPath / "model.meta")) {
+  if (is_fp16(fromPath / "model.meta")) {
     LOG(info, "The model is already fp16; just copy.");
     LOG(info, "Copy input model directory ({}) into output model directory ({})",
-        fromPath.string(),toPath.string());
+        fromPath.string(), toPath.string());
 
     if (!overwrite) {
       std::filesystem::copy(
           fromPath.string(), toPath.string(), std::filesystem::copy_options::recursive);
     }
   } else {
+    LOG(info, "The model is fp32; start conversion.");
+    auto tmpPath = overwrite ? fs::temp_directory_path() : fromPath;
+
     if (overwrite) {
-      auto tmpPath = fs::temp_directory_path();
-      convert_meta_info(fromPath / "model.meta", tmpPath / "model.meta");
-      fs::copy_file(tmpPath / "model.meta",fromPath / "model.meta");
-      fs::remove_all(tmpPath);
+      convert_meta_info(fromPath / "model.meta", fromPath / "model.meta");
       convert_model(fromPath, fromPath);
     } else {
-      convert_meta_info(fromPath / "model.meta", toPath / "model.meta");
-      convert_model(fromPath, toPath);
+      std::filesystem::copy(
+          fromPath.string(), toPath.string(), std::filesystem::copy_options::recursive);
+      convert_meta_info(toPath / "model.meta", toPath / "model.meta");
+      convert_model(toPath, toPath);
     }
   }
   LOG(info, "Finished");
