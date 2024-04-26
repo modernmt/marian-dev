@@ -38,7 +38,6 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   uint64_t numHeaders = *get<uint64_t>(current); // number of item headers that follow
   const Header* headers = get<Header>(current, numHeaders); // read that many headers
 
-  std::cerr << "void binary::loadItems(const void* current, std::vector<io::Item>& items, bool mapped) mapped:" << mapped << " numHeaders:" << numHeaders << std::endl;
   // prepopulate items with meta data from headers
   items.resize(numHeaders);
   for(int i = 0; i < numHeaders; ++i) {
