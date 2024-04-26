@@ -99,33 +99,25 @@ void convert_model(fs::path fromPath, fs::path toPath) {
     if(!fs::exists(model_bin_fp32))
       continue;
 
-    LOG(info, "Loading fp32 items from bin model ({})", model_bin_fp32.string());
+    LOG(info, "Loading fp32 items from bin model");
     std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32.string());
 
-    LOG(info, "remove binary model ({})", model_bin_fp32.string());
+    LOG(info, "remove fp32 binary model");
     fs::remove(model_bin_fp32);
 
-    LOG(info, "Saving fp32 items into npz model ({})", model_npz_fp32.string());
+    LOG(info, "Saving fp32 items into npz model");
     io::saveItems(model_npz_fp32.string(), items_fp32);
 
-    LOG(info, "Loading fp32 items from npz model ({})", model_npz_fp32.string());
+    LOG(info, "Loading fp32 items from npz model");
     std::vector<io::Item> items_fp16 = io::loadItems(model_npz_fp32.string());
 
-    LOG(info, "Removing fp32 npz model ({})", model_npz_fp32.string());
+    LOG(info, "Removing fp32 npz model");
     fs::remove(model_npz_fp32);
 
     LOG(info, "Converting npz items from fp32 into fp16");
     io::convertItems(items_fp16, "float16");
 
-/*
-    LOG(info, "Saving fp16 items into npz model ({})", model_npz_fp16.string());
-    io::saveItems(model_npz_fp16.string(), items_fp16);
-
-    LOG(info, "Removing fp16 npz model ({})", model_npz_fp16.string());
-    fs::remove(model_npz_fp16);
-*/
-
-    LOG(info, "Saving fp16 items into bin model ({})", model_bin_fp16.string());
+    LOG(info, "Saving fp16 items into bin model");
     io::saveItems(model_bin_fp16.string(), items_fp16);
   }
 }
