@@ -1,62 +1,102 @@
 #include <filesystem>
+#include <regex>
 #include "marian.h"
 #include "common/binary.h"
 
 using namespace marian;
 namespace fs = std::filesystem;
 
-int main(int argc, char** argv) {
-  using namespace marian;
-  createLoggers();
+bool is_fp16(fs::path from_model_meta) {
+  std::string line;
+  io::InputFileStream in(from_model_meta);
+  bool model_section = false;
 
-  auto options = New<Options>();
-  {
-    YAML::Node config; // @TODO: get rid of YAML::Node here entirely to avoid the pattern. Currently not fixing as it requires more changes to the Options object.
-    auto cli = New<cli::CLIWrapper>(
-        config,
-        "Convert a model from fp32 to fp16",
-        "Examples:\n"
-        "  ./marian-tofp16 -f model.bin -t model.bin");
-    cli->add<std::string>("--from,-f", "Path to dir containing the model to convert");
-    cli->add<std::string>("--to,-t", "Path to directory where to store the new model.");
-    cli->parse(argc, argv);
-    options->merge(config);
+  while(getline(in, line)) {
+    line = std::regex_replace(line, std::regex("^ +"), "");
+
+    if(line.size() > 0) {
+      if(line.rfind("[model]")) {
+        model_section = true;
+      } else if (line.size() > 0 && line.rfind("[")) {
+        model_section = false;
+      }
+    }
+    if(model_section) {
+      if(line.size() > 0 && line.rfind("model_precision")) {
+        line = std::regex_replace(line, std::regex("^ +"), "");
+        if(line.rfind("fp16")) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+void convert_meta_info(fs::path from_model_meta, fs::path to_model_meta) {
+  std::string line;
+
+  bool equivalent = false;
+  fs::path out_model_meta;
+  fs::path tmpPath;
+  if (fs::equivalent(from_model_meta, to_model_meta)) {
+      equivalent = true;
+      tmpPath = fs::temp_directory_path();
+      out_model_meta = tmpPath / "model_meta";
+    }
+  else {
+    out_model_meta = to_model_meta;
   }
 
-  fs::path fromPath = fs::path(options->get<std::string>("from"));
-  fs::path toPath = fs::path(options->get<std::string>("to"));
+  io::InputFileStream in(from_model_meta);
+  io::OutputFileStream out(out_model_meta);
 
-  ABORT_IF(!fs::exists(fromPath) || fs::is_empty(fromPath) ,
-           "Specified input directory {} does not exist, or it is empty",
-           fromPath.string());
-  ABORT_IF(fs::exists(toPath),
-           "Specified output directory {} already exists; please remote it.",
-           toPath.string());
+  bool model_section=false;
+  while(getline(in, line)) {
+    line = std::regex_replace(line, std::regex("^ +"), "");
+
+    if (line.size() > 0) {
+      if (line.rfind("[model]")) {
+        model_section = true;
+      } else if (line.size() > 0 && line.rfind("[")) {
+        model_section = false;
+      }
+    }
+    if (model_section) {
+      if(line.size() > 0 && line.rfind("model_precision")) {
+        line = std::regex_replace(line, std::regex("^ +"), "");
+        out << "model_precision = fp16" << std::endl;
+      } else {
+        out << line << std::endl;
+      }
+    } else {
+      out << line << std::endl;
+    }
+  }
+  if (equivalent) {
+    fs::remove_all(tmpPath);
+    fs::copy_file(tmpPath / "model.meta", to_model_meta);
+  }
+}
+
+
+void convert_model(fs::path fromPath, fs::path toPath) {
 
   auto tmpPath = fs::temp_directory_path();
-  std::svector<std::string> models = std::vector<std::string>({"model.bin", "model.optimizer.bin"});
-
-
-  LOG(info,
-      "Copy input model directory ({}) into output model directory ({})",
-      fromPath.string(),
-      toPath.string());
-  std::filesystem::copy(
-      fromPath.string(), toPath.string(), std::filesystem::copy_options::recursive);
-
-  for (auto model : models) {
-
+  std::vector<std::string> models = std::vector<std::string>({"model.bin", "model.optimizer.bin"});
+  for(auto model : models) {
     fs::path model_bin_fp32 = fromPath / model;
     fs::path model_bin_fp16 = toPath / model;
     fs::path model_npz_fp32 = tmpPath / "model_fp32.npz";
     fs::path model_npz_fp16 = tmpPath / "model_fp16.npz";
 
-    if (!fs::exists(model_bin_fp32))
+    if(!fs::exists(model_bin_fp32))
       continue;
 
     LOG(info,
         "remove binary model ({}) from output model directory ({})",
-        model_bin_fp32.string(), toPath.string());
+        model_bin_fp32.string(),
+        toPath.string());
     fs::remove(model_bin_fp16);
 
     LOG(info, "Loading fp32 items from bin model ({})", model_bin_fp32.string());
@@ -77,8 +117,65 @@ int main(int argc, char** argv) {
     LOG(info, "Saving fp16 items into bin model ({})", model_bin_fp16.string());
     io::saveItems(model_bin_fp16.string(), items_fp16);
 
-    fs::remove(model_npz_fp32);
-    fs::remove(model_npz_fp16);
+    fs::remove_all(tmpPath);
+  }
+}
+
+int main(int argc, char** argv) {
+  using namespace marian;
+  createLoggers();
+
+  auto options = New<Options>();
+  {
+    YAML::Node config; // @TODO: get rid of YAML::Node here entirely to avoid the pattern. Currently not fixing as it requires more changes to the Options object.
+    auto cli = New<cli::CLIWrapper>(
+        config,
+        "Convert a model from fp32 to fp16",
+        "Examples:\n"
+        "  ./marian-tofp16 -f model.bin -t model.bin  # to store the new model onto e new directory\n"
+        "  ./marian-tofp16 -f model.bin --overwrite   # to overwriting original model\n");
+    cli->add<std::string>("--from,-f", "Path to dir containing the model to convert".);
+    cli->add<std::string>("--to,-t", "Path to directory where to store the new model.");
+    cli->add<std::string>("--overwrite", "Overwrite the new model onto the original model. Default is false.", false);
+    cli->parse(argc, argv);
+    options->merge(config);
+  }
+
+  bool overwrite = options->get<bool>("overwrite");
+
+  fs::path fromPath = fs::path(options->get<std::string>("from"));
+  ABORT_IF(!fs::exists(fromPath) || fs::is_empty(fromPath) ,
+           "Specified input directory {} does not exist, or it is empty",
+           fromPath.string());
+
+  fs::path toPath;
+  if (!overwrite) {
+    toPath = fs::path(options->get<std::string>("to"));
+    ABORT_IF(fs::exists(toPath),
+             "Specified output directory {} already exists; please remote it.",
+             toPath.string());
+  }
+
+  if (is__fp16(fromPath / "model.meta")) {
+    LOG(info, "The model is already fp16; just copy.");
+    LOG(info, "Copy input model directory ({}) into output model directory ({})",
+        fromPath.string(),toPath.string());
+
+    if (!overwrite) {
+      std::filesystem::copy(
+          fromPath.string(), toPath.string(), std::filesystem::copy_options::recursive);
+    }
+  } else {
+    if (overwrite) {
+      auto tmpPath = fs::temp_directory_path();
+      convert_meta_info(fromPath / "model.meta", tmpPath / "model.meta");
+      fs::copy_file(tmpPath / "model.meta",fromPath / "model.meta");
+      fs::remove_all(tmpPath);
+      convert_model(fromPath, fromPath);
+    } else {
+      convert_meta_info(fromPath / "model.meta", toPath / "model.meta");
+      convert_model(fromPath, toPath);
+    }
   }
   LOG(info, "Finished");
 
