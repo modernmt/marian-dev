@@ -173,7 +173,6 @@ void saveItemsNpz(const std::string& fileName, const std::vector<Item>& items) {
 }
 
 void saveItems(const std::string& fileName, const std::vector<Item>& items) {
-  std::cerr << "void saveItems(const std::string& fileName, const std::vector<Item>& items) fileName:" << fileName << std::endl;
   if(isNpz(fileName)) {
     saveItemsNpz(fileName, items);
   } else if(isBin(fileName)) {
