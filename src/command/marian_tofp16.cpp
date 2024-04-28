@@ -23,7 +23,7 @@ bool is_fp16(fs::path from_model_meta) {
     }
 
     if (model_section) {
-      if (line.size() > 0 && line.rfind("model_precision") != std::string::npos) {
+      if (line.size() > 0 && line.rfind("precision") != std::string::npos) {
         line = std::regex_replace(line, std::regex("^ +"), "");
         if (line.rfind("fp16") != std::string::npos) {
           return true;
@@ -64,9 +64,9 @@ void convert_meta_info(fs::path from_model_meta, fs::path to_model_meta) {
     }
 
     if (model_section) {
-      if(line.size() > 0 && line.rfind("model_precision") != std::string::npos) {
+      if(line.size() > 0 && line.rfind("precision") != std::string::npos) {
         line = std::regex_replace(line, std::regex("^ +"), "");
-        out << "model_precision = fp16" << std::endl;
+        out << "precision = fp16" << std::endl;
       } else {
         out << line << std::endl;
       }
@@ -77,7 +77,7 @@ void convert_meta_info(fs::path from_model_meta, fs::path to_model_meta) {
 
   if (!model_section) {
     out << std::endl << "[model]" << std::endl;
-    out << "model_precision = fp16" << std::endl;
+    out << "precision = fp16" << std::endl;
   }
 
   if (equivalent) {
