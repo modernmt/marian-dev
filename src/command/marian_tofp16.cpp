@@ -93,8 +93,8 @@ void convert_model(fs::path fromPath, fs::path toPath) {
   for(auto model : models) {
     fs::path model_bin_fp32 = fromPath / model;
     fs::path model_bin_fp16 = toPath / model;
-    fs::path model_npz_fp32 = std:tmpfile();
-    fs::path model_npz_fp16 = std:tmpfile();
+    fs::path model_npz_fp32 = std::tmpfile();
+    fs::path model_npz_fp16 = std::tmpfile();
 
     if(!fs::exists(model_bin_fp32))
       continue;
