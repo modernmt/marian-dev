@@ -102,7 +102,7 @@ void convert_model(fs::path fromPath, fs::path toPath) {
     LOG(info, "Loading fp32 items from bin model");
     std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32.string());
 
-    LOG(info, "remove fp32 binary model");
+    LOG(info, "Removing fp32 bin model");
     fs::remove(model_bin_fp32);
 
     LOG(info, "Saving fp32 items into npz model");
