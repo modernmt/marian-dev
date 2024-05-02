@@ -243,17 +243,12 @@ if (NOT COMPILE_LIBRARY_ONLY)
   set_target_properties(marian_swapper PROPERTIES OUTPUT_NAME marian-swapper)
   target_compile_options(marian_swapper PRIVATE ${ALL_WARNINGS})
 
-  add_executable(marian_tofp16 command/marian_tofp16.cpp)
-  set_target_properties(marian_tofp16 PROPERTIES OUTPUT_NAME marian-tofp16)
-  target_compile_options(marian_tofp16 PRIVATE ${ALL_WARNINGS})
-
-  set(EXECUTABLES ${EXECUTABLES} marian_train marian_decoder marian_scorer marian_vocab marian_conv marian_swapper
-          marian_tofp16)
+  set(EXECUTABLES ${EXECUTABLES} marian_train marian_decoder marian_scorer marian_vocab marian_conv marian_swapper)
 
   # generate the tgz file via a custom script. This will always re-create the tarball
   add_custom_target(marian_tgz
     COMMAND ${CMAKE_COMMAND} -DCWD=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/Tarball.cmake
-    DEPENDS marian_train marian_decoder marian_scorer marian_vocab marian_conv marian_swapper marian_tofp16)
+    DEPENDS marian_train marian_decoder marian_scorer marian_vocab marian_conv marian_swapper)
 
   if(COMPILE_SERVER)
     add_executable(marian_server command/marian_server.cpp)
