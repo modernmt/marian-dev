@@ -95,7 +95,7 @@ void convert_model(fs::path fromPath, fs::path toPath) {
     fs::path model_bin_fp16 = toPath / model;
     fs::path model_npz_fp32 = toPath / ( "_fp32" + std::to_string(std::rand()) + ".npz");
 
-    ABORT_IF(!fs::exists(model_bin_fp16), "fp32 bin model ({}) does not exists", model_bin_fp32.string());
+    ABORT_IF(!fs::exists(model_bin_fp32), "fp32 bin model ({}) does not exists", model_bin_fp32.string());
 
     LOG(info, "Loading fp32 items from bin model");
     std::vector<io::Item> items_fp32 = io::loadItems(model_bin_fp32.string());
