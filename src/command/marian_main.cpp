@@ -40,9 +40,6 @@
 #define main mainSwapper
 #include "marian_swapper.cpp"
 #undef main
-#define main mainToFP16
-#include "marian_tofp16.cpp"
-#undef main
 
 #include "3rd_party/ExceptionWithCallStack.h"
 
@@ -62,8 +59,7 @@ int main(int argc, char** argv) {
     else if (cmd == "vocab")     return mainVocab(argc, argv);
     else if (cmd == "convert")   return mainConv(argc, argv);
     else if (cmd == "swapper")   return mainSwapper(argc, argv);
-    else if (cmd == "tofp16")    return mainToFP16(argc, argv);
-    std::cerr << "Command must be train, decode, score, embed, vocab, convert, tofp16." << std::endl;
+    std::cerr << "Command must be train, decode, score, embed, vocab, convert, swapper." << std::endl;
     exit(1);
   } else
     return mainTrainer(argc, argv);
