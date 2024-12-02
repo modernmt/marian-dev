@@ -140,7 +140,7 @@ private:
     }
     
     Samples maxiBatchTemp;
-    while(current_->valid() && current_->size() > 0 && maxiBatchTemp.size() < maxSize) { // loop over data
+    while(current_ != data_->end() && maxiBatchTemp.size() < maxSize) { // loop over data
       if (saveAndExitRequested()) // stop generating batches
         return std::deque<BatchPtr>();
       
