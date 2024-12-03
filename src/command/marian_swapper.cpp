@@ -21,7 +21,7 @@ void LoadBig(Ptr<Options> options, std::unordered_map<std::string, CPULoadedMode
 
 void LoadTiny(Ptr<Options> options, std::unordered_map<std::string, CPULoadedModel> &to) {
   std::vector<std::string> models = {"csen", "encs", "enet", "eten", "esen", "enes"};
-  for (const std::string m : models) {
+  for (const std::string &m : models) {
     std::string base = "/home/ubuntu/consistent-bergamot-students/padded/";
     base += m + ".";
     to.emplace(m, CPULoadedModel(options, base + "npz", {base + "spm"}, base + "spm"));
