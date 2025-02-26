@@ -233,7 +233,7 @@ else(MSVC)
   set(DISABLE_GLOBALLY "-Wno-unused-result ${CLANG_IGNORE_UNKNOWN_CUDA}")
 
   # These are used in src/CMakeLists.txt on a per-target basis
-  list(APPEND ALL_WARNINGS -Wall; -Werror; -Wextra; -Wno-unused-result; -Wno-deprecated;
+  list(APPEND ALL_WARNINGS -Wall; -Wextra; -Wno-unused-result; -Wno-deprecated;
     -Wno-pragmas; -Wno-unused-parameter; -Wno-unused-function;
     -Wno-unused-value; -Wno-unknown-pragmas; -Wno-sign-compare;
     -Wno-missing-field-initializers;)
@@ -481,7 +481,7 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 if(NOT MSVC)
   # @TODO: add warnings here too
-  list(APPEND CUDA_NVCC_FLAGS -ccbin ${CMAKE_C_COMPILER}; -std=c++11; -Xcompiler\ -fPIC; -Xcompiler\ -Wno-unused-result; -Xcompiler\ -Wno-deprecated; -Xcompiler\ -Wno-pragmas; -Xcompiler\ -Wno-unused-value; -Xcompiler\ -Werror;)
+  list(APPEND CUDA_NVCC_FLAGS -ccbin ${CMAKE_C_COMPILER}; -std=c++11; -Xcompiler\ -fPIC; -Xcompiler\ -Wno-unused-result; -Xcompiler\ -Wno-deprecated; -Xcompiler\ -Wno-pragmas; -Xcompiler\ -Wno-unused-value;)
   list(APPEND CUDA_NVCC_FLAGS ${INTRINSICS_NVCC})
 else()
   list(APPEND CUDA_NVCC_FLAGS -Xcompiler\ /FS; -Xcompiler\ /MT$<$<CONFIG:Debug>:d>; )
